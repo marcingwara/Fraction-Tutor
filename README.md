@@ -106,14 +106,6 @@ cd fraction-tutor
 - **CSS Grid & Flexbox** – Responsive layouts
 - **localStorage** – Remembers your language preference
 
-### Browser Support
-- ✅ Chrome 67+ (2018)
-- ✅ Firefox 68+ (2019)
-- ✅ Safari 14+ (iOS 14+)
-- ✅ Edge 79+
-
-**Note:** Requires BigInt support (iOS 14+ / 2020 browsers)
-
 ### Key Features
 - **Single file** – Everything in one HTML file for easy distribution
 - **No build process** – Just open and use
@@ -122,21 +114,6 @@ cd fraction-tutor
 
 ---
 
-## 🎨 Screenshots
-
-### Main Calculator
-![Main Interface](screenshot-main.png)
-
-### Visual Explanation – Addition
-![Addition Steps](screenshot-addition.png)
-
-### Visual Explanation – Division
-![Division Steps](screenshot-division.png)
-
-### Mobile View
-![Mobile Interface](screenshot-mobile.png)
-
----
 
 ## 🌟 Use Cases
 
@@ -201,7 +178,7 @@ See [LICENSE](LICENSE) file for full details.
 
 **Marcin Gwara**
 
-Educational math project • 2024
+Educational math project • 2026
 
 ---
 
@@ -211,15 +188,6 @@ Educational math project • 2024
 - Thanks to all teachers providing feedback
 - Built with ❤️ for students struggling with fractions
 
----
-
-## 📞 Support
-
-Found this helpful? ⭐ **Star this repo** to show your support!
-
-Have questions? 💬 **Open an issue** – I'm here to help!
-
-Want to contribute? 🤝 **Pull requests welcome!**
 
 ---
 
