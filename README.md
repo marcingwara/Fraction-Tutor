@@ -4,7 +4,7 @@
 
 **An interactive, educational fraction calculator with step-by-step visual explanations designed to help students truly understand how fractions work.**
 
-🌐 **[Live Demo](https://your-username.github.io/fraction-tutor)** | 📱 **Mobile Friendly** | 🌍 **5 Languages**
+🌐 **[Live Demo]([https://marcingwara.github.io/Fraction-Tutor/])** | 📱 **Mobile Friendly** | 🌍 **5 Languages**
 
 ---
 
@@ -47,7 +47,7 @@ Works in **5 languages** with full translations:
 ## 🚀 Quick Start
 
 ### Option 1: Use Online
-Just visit the [live demo](https://your-username.github.io/fraction-tutor) – no installation needed!
+Just visit the [live demo](https://marcingwara.github.io/Fraction-Tutor/) – no installation needed!
 
 ### Option 2: Run Locally
 1. Download `fraction-tutor-visual.html`
