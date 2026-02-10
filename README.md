@@ -56,9 +56,9 @@ Just visit the [live demo](https://marcingwara.github.io/Fraction-Tutor/) – no
 
 ```bash
 # Or clone the repo
-git clone https://github.com/your-username/fraction-tutor.git
+git clone https://github.com/marcingwara/Fraction-Tutor.git
 cd fraction-tutor
-# Open fraction-tutor-visual.html in your browser
+# Open fraction-tutor.html in your browser
 ```
 
 ---
