@@ -170,8 +170,6 @@ XX: {
 
 **MIT License** – Free to use, modify, and distribute.
 
-See [LICENSE](LICENSE) file for full details.
-
 ---
 
 ## 👨‍💻 Author
