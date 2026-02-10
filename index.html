@@ -1,0 +1,1966 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <title>Fraction Tutor — Kalkulator ułamków z wizualizacją</title>
+  <style>
+    :root{
+      --bg: #0b1020;
+      --panel: rgba(255,255,255,.06);
+      --panel2: rgba(255,255,255,.09);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.65);
+      --border: rgba(255,255,255,.14);
+      --shadow: 0 18px 55px rgba(0,0,0,.45);
+      --accent: #7c5cff;
+      --accent2:#38bdf8;
+      --good:#22c55e;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    [data-theme="light"]{
+      --bg:#f6f7fb;
+      --panel: rgba(15,23,42,.06);
+      --panel2: rgba(15,23,42,.09);
+      --text: rgba(2,6,23,.92);
+      --muted: rgba(2,6,23,.62);
+      --border: rgba(2,6,23,.14);
+      --shadow: 0 18px 55px rgba(2,6,23,.12);
+      --accent:#6d28d9;
+      --accent2:#0284c7;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: var(--sans);
+      color: var(--text);
+      background:
+        radial-gradient(1100px 700px at 20% 10%, rgba(124,92,255,.35), transparent 60%),
+        radial-gradient(900px 600px at 80% 25%, rgba(56,189,248,.25), transparent 60%),
+        radial-gradient(900px 600px at 40% 95%, rgba(34,197,94,.15), transparent 60%),
+        var(--bg);
+      min-height:100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .wrap{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 28px 16px 42px;
+    }
+
+    header{
+      display:flex;
+      gap:16px;
+      align-items:flex-start;
+      justify-content:space-between;
+      margin-bottom: 18px;
+    }
+
+    .brand{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    .author-name{
+      font-weight: 800;
+      font-size: 28px;
+      letter-spacing: 1.5px;
+      background: linear-gradient(135deg, #7c5cff, #38bdf8, #22c55e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+    
+    /* Fix for Safari/iOS */
+    @supports (-webkit-background-clip: text) {
+      .author-name {
+        background: linear-gradient(135deg, #7c5cff, #38bdf8, #22c55e);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding: 8px 12px;
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, var(--panel), transparent);
+      border-radius: 999px;
+      width: fit-content;
+      box-shadow: var(--shadow);
+    }
+
+    .dot{
+      width:10px;height:10px;border-radius:99px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 0 0 6px rgba(124,92,255,.12);
+    }
+
+    h1{
+      margin: 6px 0 0;
+      font-size: clamp(22px, 3.2vw, 34px);
+      letter-spacing: .2px;
+      line-height:1.15;
+    }
+
+    .sub{
+      color: var(--muted);
+      max-width: 64ch;
+      line-height:1.45;
+      margin: 0;
+    }
+
+    .controls{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      margin-top: 6px;
+    }
+
+    .pill{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, var(--panel2), transparent);
+      box-shadow: var(--shadow);
+    }
+
+    select, button, input{
+      font: inherit;
+      color: var(--text);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      outline: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+    select{ 
+      padding-right: 34px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+    }
+    input::placeholder{ color: rgba(255,255,255,.45); }
+    [data-theme="light"] input::placeholder{ color: rgba(2,6,23,.45); }
+
+    button{
+      cursor:pointer;
+      border:1px solid rgba(124,92,255,.35);
+      background: linear-gradient(135deg, rgba(124,92,255,.35), rgba(56,189,248,.20));
+      transition: transform .06s ease, filter .15s ease;
+      font-weight: 650;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    button:hover{ filter: brightness(1.07); }
+    button:active{ transform: translateY(1px); }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 980px){
+      header{ flex-direction:column; }
+      .controls{ justify-content:flex-start; }
+    }
+
+    .card{
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, var(--panel2), transparent);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .card .hd{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), transparent);
+    }
+    .card .hd h2{
+      margin:0;
+      font-size: 15px;
+      letter-spacing:.2px;
+    }
+    .card .bd{
+      padding: 14px 16px 16px;
+    }
+
+    .form{
+      display:grid;
+      grid-template-columns: 1fr 110px 1fr;
+      gap: 10px;
+      align-items:end;
+    }
+    @media (max-width: 680px){
+      .form{
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+    }
+    
+    /* iOS Safari fix */
+    @supports (-webkit-overflow-scrolling: touch) {
+      .form {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+      .form > div {
+        flex: 1 1 auto;
+        min-width: 110px;
+      }
+      @media (max-width: 680px){
+        .form {
+          -webkit-box-orient: vertical;
+          -webkit-box-direction: normal;
+          -ms-flex-direction: column;
+          flex-direction: column;
+        }
+        .form > div {
+          width: 100%;
+        }
+      }
+    }
+
+    label{
+      display:block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      letter-spacing:.2px;
+    }
+
+    .hint{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+      line-height: 1.35;
+    }
+
+    .resultRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    @media (max-width: 680px){
+      .resultRow{ grid-template-columns: 1fr; }
+    }
+
+    .resultBox{
+      border: 1px dashed rgba(255,255,255,.22);
+      border-radius: 14px;
+      padding: 12px 12px;
+      background: rgba(0,0,0,.14);
+    }
+    [data-theme="light"] .resultBox{ background: rgba(2,6,23,.04); border-color: rgba(2,6,23,.22); }
+
+    .resultBox .k{
+      font-size:12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .resultBox .v{
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing:.3px;
+    }
+
+    .steps{
+      font-family: var(--mono);
+      white-space: pre-wrap;
+      line-height: 1.45;
+      font-size: 13px;
+      padding: 14px;
+      border-top: 1px solid var(--border);
+      background: rgba(0,0,0,.10);
+      min-height: 200px;
+    }
+    [data-theme="light"] .steps{ background: rgba(2,6,23,.03); }
+
+    .visual-section{
+      margin-top: 16px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(0,0,0,.08);
+    }
+    [data-theme="light"] .visual-section{ background: rgba(2,6,23,.02); }
+
+    .visual-title{
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent2);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .visual-step{
+      margin: 16px 0;
+      padding: 14px;
+      background: rgba(124,92,255,.08);
+      border-radius: 12px;
+      border-left: 4px solid var(--accent);
+    }
+
+    .visual-step-title{
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .visual-step-title .step-number{
+      background: var(--accent);
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .visual-step-content{
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    .fraction-comparison{
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin: 12px 0;
+      flex-wrap: wrap;
+      padding: 12px;
+      background: rgba(0,0,0,.15);
+      border-radius: 10px;
+    }
+
+    [data-theme="light"] .fraction-comparison{
+      background: rgba(2,6,23,.05);
+    }
+
+    .arrow{
+      font-size: 24px;
+      color: var(--accent2);
+      font-weight: 700;
+    }
+
+    .lcm-box{
+      display: inline-block;
+      padding: 6px 12px;
+      background: linear-gradient(135deg, rgba(124,92,255,.25), rgba(56,189,248,.15));
+      border-radius: 8px;
+      font-family: var(--mono);
+      font-weight: 700;
+      color: var(--accent2);
+      margin: 4px;
+    }
+
+    .multiplier-visual{
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin: 8px 0;
+      font-family: var(--mono);
+      font-size: 14px;
+    }
+
+    .multiplier-box{
+      padding: 4px 10px;
+      background: rgba(34,197,94,.15);
+      border: 1px solid var(--good);
+      border-radius: 6px;
+      color: var(--good);
+      font-weight: 700;
+    }
+
+    .explanation-grid{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin: 12px 0;
+    }
+
+    .explanation-card{
+      padding: 12px;
+      background: rgba(0,0,0,.12);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    [data-theme="light"] .explanation-card{
+      background: rgba(2,6,23,.04);
+    }
+
+    .explanation-card-title{
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .explanation-card-value{
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .fraction-visual{
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin: 12px 0;
+    }
+
+    .fraction-box{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .fraction-display{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: var(--mono);
+      font-size: 24px;
+      font-weight: 700;
+      min-width: 60px;
+    }
+
+    .numerator{
+      padding: 4px 8px;
+      color: var(--accent2);
+    }
+
+    .fraction-line{
+      width: 100%;
+      height: 2px;
+      background: var(--text);
+      margin: 2px 0;
+    }
+
+    .denominator{
+      padding: 4px 8px;
+      color: var(--good);
+    }
+
+    .operator{
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--warn);
+    }
+
+    .pie-container{
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .pie-wrapper{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pie-label{
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    canvas{
+      border-radius: 8px;
+      background: rgba(255,255,255,.03);
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+    }
+
+    [data-theme="light"] canvas{
+      background: rgba(2,6,23,.02);
+    }
+
+    .toast{
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(239,68,68,.35);
+      background: rgba(239,68,68,.12);
+      color: var(--text);
+      display:none;
+      margin-top: 10px;
+    }
+
+    .mini{
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    footer{
+      margin-top: 14px;
+      display:flex;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap:wrap;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .kbd{
+      font-family: var(--mono);
+      border:1px solid var(--border);
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: rgba(0,0,0,.12);
+    }
+    [data-theme="light"] .kbd{ background: rgba(2,6,23,.04); }
+
+    .help-grid{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .help-card{
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: rgba(0,0,0,.08);
+    }
+
+    [data-theme="light"] .help-card{
+      background: rgba(2,6,23,.02);
+    }
+
+    .help-card h3{
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      color: var(--accent);
+    }
+
+    .help-card p{
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.4;
+      color: var(--muted);
+    }
+
+    .step-visual{
+      margin: 8px 0;
+      padding: 8px;
+      background: rgba(124,92,255,.08);
+      border-radius: 8px;
+      border-left: 3px solid var(--accent);
+    }
+  </style>
+</head>
+
+<body data-theme="dark">
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="author-name">Marcin Gwara</div>
+        
+        <div class="badge">
+          <div class="dot"></div>
+          <div style="font-weight:700">Fraction Tutor</div>
+          <div style="opacity:.55">— wizualizacja krok po kroku</div>
+        </div>
+        <h1 id="title">Kalkulator ułamków z grafiką</h1>
+        <p class="sub" id="subtitle">
+          Zobacz jak działają ułamki dzięki kolorowym wizualizacjom i szczegółowym wyjaśnieniom każdego kroku.
+        </p>
+      </div>
+
+      <div class="controls">
+        <div class="pill">
+          <span id="langLabel" class="mini">Język</span>
+          <select id="langSelect" aria-label="Language">
+            <option value="PL">PL</option>
+            <option value="EN">EN</option>
+            <option value="DE">DE</option>
+            <option value="TR">TR</option>
+            <option value="RU">RU</option>
+          </select>
+        </div>
+        <button id="themeBtn" type="button">🌙 / ☀️</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <div class="hd">
+          <h2 id="calcHeader">Obliczenia</h2>
+          <p class="mini" id="examples">Przykłady: <span class="kbd">2 1/3</span>, <span class="kbd">3/4</span>, <span class="kbd">5</span></p>
+        </div>
+        <div class="bd">
+          <div class="form">
+            <div>
+              <label id="aLabel" for="aInput">Liczba A</label>
+              <input id="aInput" placeholder="np. 2 1/3" />
+            </div>
+
+            <div>
+              <label id="opLabel" for="opSelect">Działanie</label>
+              <select id="opSelect">
+                <option value="+">+</option>
+                <option value="-">−</option>
+                <option value="*">×</option>
+                <option value="/">÷</option>
+              </select>
+            </div>
+
+            <div>
+              <label id="bLabel" for="bInput">Liczba B</label>
+              <input id="bInput" placeholder="np. 1/6" />
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top: 12px; flex-wrap:wrap;">
+            <button id="calcBtn" type="button">Policz i wytłumacz</button>
+            <button id="fillBtn" type="button" style="border-color: rgba(34,197,94,.35); background: linear-gradient(135deg, rgba(34,197,94,.22), rgba(56,189,248,.10)); font-weight:650;">
+              Wstaw przykład
+            </button>
+          </div>
+
+          <div class="toast" id="toast"></div>
+
+          <p class="hint" id="hint">
+            Liczba mieszana wpisuj jako <span class="kbd">2 1/3</span> (jedna spacja). Ułamki jako <span class="kbd">a/b</span>.
+          </p>
+
+          <div class="resultRow">
+            <div class="resultBox">
+              <div class="k" id="resFracLabel">Wynik jako ułamek</div>
+              <div class="v" id="resFrac">—</div>
+            </div>
+            <div class="resultBox">
+              <div class="k" id="resMixLabel">Wynik jako mieszana</div>
+              <div class="v" id="resMix">—</div>
+            </div>
+          </div>
+
+          <div class="visual-section" id="visualSection" style="display:none;">
+            <div class="visual-title">📊 Wizualizacja działania</div>
+            <div id="visualExplanation"></div>
+            <div id="fractionVisual"></div>
+            <div id="pieVisual"></div>
+          </div>
+        </div>
+
+        <div class="steps" id="steps">
+Tu pojawi się dokładne wyjaśnienie krok po kroku z grafiką.
+        </div>
+      </section>
+
+      <aside class="card">
+        <div class="hd">
+          <h2 id="helpHeader">Jak działają ułamki?</h2>
+          <p class="mini" id="helpMini">Ilustrowany przewodnik</p>
+        </div>
+        <div class="bd" id="helpBody">
+          <div class="help-grid" id="helpCards"></div>
+
+          <hr style="border:0;border-top:1px solid var(--border);margin:16px 0"/>
+          <p class="mini" id="helpTip"></p>
+        </div>
+      </aside>
+    </div>
+
+    <footer>
+      <div>Projekt edukacyjny © 2024</div>
+      <div>Wersja: <span class="kbd">v2.0 - Visual</span></div>
+    </footer>
+  </div>
+
+<script>
+  // Check BigInt support (required for iOS 14+)
+  if (typeof BigInt === 'undefined') {
+    const lang = navigator.language.substring(0, 2).toUpperCase();
+    const messages = {
+      PL: 'Ta przeglądarka nie obsługuje BigInt. Zaktualizuj iOS do wersji 14 lub nowszej.',
+      EN: 'This browser does not support BigInt. Update iOS to version 14 or newer.',
+      DE: 'Dieser Browser unterstützt BigInt nicht. Aktualisieren Sie iOS auf Version 14 oder neuer.',
+      TR: 'Bu tarayıcı BigInt desteklemiyor. iOS\'u sürüm 14 veya daha yenisine güncelleyin.',
+      RU: 'Этот браузер не поддерживает BigInt. Обновите iOS до версии 14 или новее.'
+    };
+    alert(messages[lang] || messages.EN);
+  }
+
+  // ================== i18n text ==================
+  const T = {
+    PL: {
+      title: "Kalkulator ułamków z grafiką",
+      subtitle: "Zobacz jak działają ułamki dzięki kolorowym wizualizacjom i szczegółowym wyjaśnieniom każdego kroku.",
+      langLabel: "Język",
+      calcHeader: "Obliczenia",
+      examples: "Przykłady: 2 1/3, 3/4, 5",
+      aLabel: "Liczba A",
+      bLabel: "Liczba B",
+      opLabel: "Działanie",
+      calcBtn: "Policz i wytłumacz",
+      fillBtn: "Wstaw przykład",
+      hint: "Liczba mieszana wpisuj jako 2 1/3 (jedna spacja). Ułamki jako a/b.",
+      resFrac: "Wynik jako ułamek",
+      resMix: "Wynik jako mieszana",
+      helpHeader: "Jak działają ułamki?",
+      helpMini: "Ilustrowany przewodnik",
+      stepsDefault: "Tu pojawi się dokładne wyjaśnienie krok po kroku z grafiką.",
+      errEmpty: "Uzupełnij oba pola: A i B.",
+      errFormat: "Zły format. Użyj np. 5 albo 3/4 albo 2 1/3.",
+      errDiv0: "Nie można dzielić przez 0.",
+      visualTitle: "📊 Wizualizacja działania",
+      visualLabelA: "Liczba A",
+      visualLabelB: "Liczba B",
+      visualLabelResult: "Wynik",
+      visualSteps: {
+        common_denom_title: "Wspólny mianownik",
+        common_denom_why: "🤔 Po co nam ten sam mianownik?",
+        common_denom_explain: "Wyobraź sobie pizzę! Jeden ułamek ma kawałki po 1/4 pizzy, a drugi po 1/3 pizzy. To są różne kawałki! Musimy je zamienić na takie same, żeby móc je dodać lub odjąć.",
+        lcm_title: "🔍 Szukamy wspólnego mianownika",
+        lcm_explain: "Znajdujemy najmniejszą liczbę, która dzieli się przez oba mianowniki (NWW)",
+        converting_title: "✨ Zamieniamy ułamki na ten sam mianownik",
+        converting_explain: "Mnożymy góra×ta_sama_liczba i dół×ta_sama_liczba. Tak jakbyś pociął pizzę na mniejsze kawałki - masz więcej kawałków, ale ta sama ilość pizzy!",
+        multiplier: "Mnożymy przez",
+        original: "Początek",
+        converted: "Po zamianie",
+        computing_title: "🧮 Teraz liczymy!",
+        computing_explain: "Super! Mamy te same kawałki (mianowniki są równe). Teraz po prostu dodajemy/odejmujemy liczby z góry (liczniki).",
+        multiply_title: "✖️ Mnożymy ułamki",
+        multiply_explain: "To jest proste! Mnożymy górę przez górę i dół przez dół. Tak jakbyś miał pudełko 2×3 i sprawdzał ile w nim jest miejsc.",
+        divide_title: "➗ Dzielimy ułamki",
+        divide_explain: "Zamiast dzielić, ODWRACAMY drugi ułamek do góry nogami i mnożymy! To taka matematyczna sztuczka 🎩✨",
+        reciprocal: "Odwrócony",
+        numerator_x_numerator: "Góra × Góra",
+        denominator_x_denominator: "Dół × Dół",
+        piece_size: "Rozmiar kawałka",
+        same_pieces: "Teraz te same kawałki!",
+      },
+      helpCards: {
+        add: {
+          title: "➕ Dodawanie",
+          desc: "Musisz mieć <b>ten sam mianownik</b> (rozmiar kawałków). Potem dodajesz tylko liczniki.",
+          example: "1/4 + 1/4 = 2/4 = 1/2"
+        },
+        sub: {
+          title: "➖ Odejmowanie",
+          desc: "Tak samo jak dodawanie - potrzebny <b>wspólny mianownik</b>, potem odejmujesz liczniki.",
+          example: "3/4 - 1/4 = 2/4 = 1/2"
+        },
+        mul: {
+          title: "✖️ Mnożenie",
+          desc: "Proste! Mnóż <b>licznik × licznik</b> i <b>mianownik × mianownik</b>.",
+          example: "2/3 × 3/4 = 6/12 = 1/2"
+        },
+        div: {
+          title: "➗ Dzielenie",
+          desc: "Zamień na mnożenie! Odwróć drugi ułamek i pomnóż.",
+          example: "1/2 ÷ 1/4 = 1/2 × 4/1 = 2"
+        }
+      }
+    },
+    EN: {
+      title: "Fraction calculator with visuals",
+      subtitle: "See how fractions work with colorful visualizations and detailed step-by-step explanations.",
+      langLabel: "Language",
+      calcHeader: "Calculator",
+      examples: "Examples: 2 1/3, 3/4, 5",
+      aLabel: "Number A",
+      bLabel: "Number B",
+      opLabel: "Operator",
+      calcBtn: "Calculate + explain",
+      fillBtn: "Insert example",
+      hint: "Mixed number: 2 1/3 (one space). Fraction: a/b.",
+      resFrac: "Result as fraction",
+      resMix: "Result as mixed",
+      helpHeader: "How fractions work?",
+      helpMini: "Visual guide",
+      stepsDefault: "A detailed step-by-step explanation with visuals will appear here.",
+      errEmpty: "Fill both fields: A and B.",
+      errFormat: "Invalid format. Use e.g. 5 or 3/4 or 2 1/3.",
+      errDiv0: "Cannot divide by 0.",
+      visualTitle: "📊 Visual representation",
+      visualLabelA: "Number A",
+      visualLabelB: "Number B",
+      visualLabelResult: "Result",
+      visualSteps: {
+        common_denom_title: "Common Denominator",
+        common_denom_why: "🤔 Why do we need the same denominator?",
+        common_denom_explain: "Imagine a pizza! One fraction has pieces of 1/4 pizza, the other has 1/3 pizza pieces. These are different sizes! We need to make them the same size before we can add or subtract.",
+        lcm_title: "🔍 Finding the common denominator",
+        lcm_explain: "We find the smallest number that divides by both denominators (LCM)",
+        converting_title: "✨ Converting fractions to the same denominator",
+        converting_explain: "We multiply top×same_number and bottom×same_number. It's like cutting pizza into smaller pieces - you have more pieces, but the same amount of pizza!",
+        multiplier: "Multiply by",
+        original: "Start",
+        converted: "After converting",
+        computing_title: "🧮 Now let's calculate!",
+        computing_explain: "Great! We have the same pieces (denominators are equal). Now we just add/subtract the top numbers (numerators).",
+        multiply_title: "✖️ Multiplying fractions",
+        multiply_explain: "This is easy! Multiply top times top and bottom times bottom. Like counting boxes in a 2×3 grid.",
+        divide_title: "➗ Dividing fractions",
+        divide_explain: "Instead of dividing, we FLIP the second fraction upside down and multiply! It's a math magic trick 🎩✨",
+        reciprocal: "Flipped",
+        numerator_x_numerator: "Top × Top",
+        denominator_x_denominator: "Bottom × Bottom",
+        piece_size: "Piece size",
+        same_pieces: "Now the same pieces!",
+      },
+      helpCards: {
+        add: {
+          title: "➕ Addition",
+          desc: "You need the <b>same denominator</b> (same piece size). Then add only the numerators.",
+          example: "1/4 + 1/4 = 2/4 = 1/2"
+        },
+        sub: {
+          title: "➖ Subtraction",
+          desc: "Same as addition - need a <b>common denominator</b>, then subtract numerators.",
+          example: "3/4 - 1/4 = 2/4 = 1/2"
+        },
+        mul: {
+          title: "✖️ Multiplication",
+          desc: "Simple! Multiply <b>numerator × numerator</b> and <b>denominator × denominator</b>.",
+          example: "2/3 × 3/4 = 6/12 = 1/2"
+        },
+        div: {
+          title: "➗ Division",
+          desc: "Change to multiplication! Flip the second fraction and multiply.",
+          example: "1/2 ÷ 1/4 = 1/2 × 4/1 = 2"
+        }
+      }
+    },
+    DE: {
+      title: "Bruchrechner mit Grafik",
+      subtitle: "Sehe wie Brüche funktionieren mit bunten Visualisierungen und detaillierten Schritt-für-Schritt-Erklärungen.",
+      langLabel: "Sprache",
+      calcHeader: "Rechner",
+      examples: "Beispiele: 2 1/3, 3/4, 5",
+      aLabel: "Zahl A",
+      bLabel: "Zahl B",
+      opLabel: "Operator",
+      calcBtn: "Rechnen + erklären",
+      fillBtn: "Beispiel einsetzen",
+      hint: "Gemischte Zahl: 2 1/3 (ein Leerzeichen). Bruch: a/b.",
+      resFrac: "Ergebnis als Bruch",
+      resMix: "Ergebnis als gemischt",
+      helpHeader: "Wie funktionieren Brüche?",
+      helpMini: "Bildlicher Leitfaden",
+      stepsDefault: "Hier erscheint eine detaillierte Schritt-für-Schritt-Erklärung mit Grafik.",
+      errEmpty: "Bitte beide Felder ausfüllen: A und B.",
+      errFormat: "Ungültiges Format. Nutze z.B. 5 oder 3/4 oder 2 1/3.",
+      errDiv0: "Division durch 0 ist nicht erlaubt.",
+      visualTitle: "📊 Visuelle Darstellung",
+      visualLabelA: "Zahl A",
+      visualLabelB: "Zahl B",
+      visualLabelResult: "Ergebnis",
+      visualSteps: {
+        common_denom_title: "Gemeinsamer Nenner",
+        common_denom_why: "🤔 Warum brauchen wir den gleichen Nenner?",
+        common_denom_explain: "Stell dir eine Pizza vor! Ein Bruch hat Stücke von 1/4 Pizza, der andere hat 1/3 Pizza Stücke. Das sind verschiedene Größen! Wir müssen sie gleich groß machen, bevor wir addieren oder subtrahieren können.",
+        lcm_title: "🔍 Gemeinsamen Nenner finden",
+        lcm_explain: "Wir finden die kleinste Zahl, die durch beide Nenner teilbar ist (kgV)",
+        converting_title: "✨ Brüche auf den gleichen Nenner bringen",
+        converting_explain: "Wir multiplizieren oben×gleiche_Zahl und unten×gleiche_Zahl. Wie wenn du Pizza in kleinere Stücke schneidest - du hast mehr Stücke, aber gleich viel Pizza!",
+        multiplier: "Multiplizieren mit",
+        original: "Start",
+        converted: "Nach Umwandlung",
+        computing_title: "🧮 Jetzt rechnen wir!",
+        computing_explain: "Super! Wir haben die gleichen Stücke (Nenner sind gleich). Jetzt addieren/subtrahieren wir nur die oberen Zahlen (Zähler).",
+        multiply_title: "✖️ Brüche multiplizieren",
+        multiply_explain: "Das ist einfach! Oben mal oben und unten mal unten multiplizieren. Wie Kästchen in einem 2×3 Raster zählen.",
+        divide_title: "➗ Brüche dividieren",
+        divide_explain: "Statt zu dividieren, drehen wir den zweiten Bruch auf den Kopf und multiplizieren! Das ist ein Mathe-Zaubertrick 🎩✨",
+        reciprocal: "Umgedreht",
+        numerator_x_numerator: "Oben × Oben",
+        denominator_x_denominator: "Unten × Unten",
+        piece_size: "Stückgröße",
+        same_pieces: "Jetzt gleiche Stücke!",
+      },
+      helpCards: {
+        add: {
+          title: "➕ Addition",
+          desc: "Du brauchst den <b>gleichen Nenner</b> (gleiche Stückgröße). Dann nur Zähler addieren.",
+          example: "1/4 + 1/4 = 2/4 = 1/2"
+        },
+        sub: {
+          title: "➖ Subtraktion",
+          desc: "Wie Addition - <b>gemeinsamer Nenner</b> nötig, dann Zähler subtrahieren.",
+          example: "3/4 - 1/4 = 2/4 = 1/2"
+        },
+        mul: {
+          title: "✖️ Multiplikation",
+          desc: "Einfach! <b>Zähler × Zähler</b> und <b>Nenner × Nenner</b> multiplizieren.",
+          example: "2/3 × 3/4 = 6/12 = 1/2"
+        },
+        div: {
+          title: "➗ Division",
+          desc: "In Multiplikation umwandeln! Zweiten Bruch umdrehen und multiplizieren.",
+          example: "1/2 ÷ 1/4 = 1/2 × 4/1 = 2"
+        }
+      }
+    },
+    TR: {
+      title: "Grafikli kesir hesaplayıcı",
+      subtitle: "Renkli görselleştirmeler ve ayrıntılı adım adım açıklamalarla kesirlerin nasıl çalıştığını görün.",
+      langLabel: "Dil",
+      calcHeader: "Hesaplama",
+      examples: "Örnekler: 2 1/3, 3/4, 5",
+      aLabel: "A Sayısı",
+      bLabel: "B Sayısı",
+      opLabel: "İşlem",
+      calcBtn: "Hesapla ve açıkla",
+      fillBtn: "Örnek ekle",
+      hint: "Karma sayı: 2 1/3 (bir boşluk). Kesir: a/b.",
+      resFrac: "Kesir olarak sonuç",
+      resMix: "Karma olarak sonuç",
+      helpHeader: "Kesirler nasıl çalışır?",
+      helpMini: "Görsel kılavuz",
+      stepsDefault: "Burada görselli ayrıntılı adım adım açıklama görünecek.",
+      errEmpty: "Her iki alanı doldurun: A ve B.",
+      errFormat: "Geçersiz format. Örn: 5 veya 3/4 veya 2 1/3 kullanın.",
+      errDiv0: "Sıfıra bölme yapılamaz.",
+      visualTitle: "📊 Görsel gösterim",
+      visualLabelA: "A Sayısı",
+      visualLabelB: "B Sayısı",
+      visualLabelResult: "Sonuç",
+      visualSteps: {
+        common_denom_title: "Ortak Payda",
+        common_denom_why: "🤔 Neden aynı paydaya ihtiyacımız var?",
+        common_denom_explain: "Bir pizza hayal et! Bir kesir 1/4 pizza parçalarına, diğeri 1/3 pizza parçalarına sahip. Bunlar farklı boyutlar! Toplayabilmek veya çıkarabilmek için onları aynı boyutta yapmamız gerekir.",
+        lcm_title: "🔍 Ortak payda bulma",
+        lcm_explain: "Her iki paydaya bölünebilen en küçük sayıyı buluyoruz (EKOK)",
+        converting_title: "✨ Kesirleri aynı paydaya çevirme",
+        converting_explain: "Üst×aynı_sayı ve alt×aynı_sayı ile çarpıyoruz. Pizzayı daha küçük parçalara kesmek gibi - daha fazla parçan var ama aynı miktarda pizza!",
+        multiplier: "Şununla çarp",
+        original: "Başlangıç",
+        converted: "Dönüştürüldükten sonra",
+        computing_title: "🧮 Şimdi hesaplayalım!",
+        computing_explain: "Harika! Aynı parçalara sahibiz (paydalar eşit). Şimdi sadece üstteki sayıları (pay) topluyoruz/çıkarıyoruz.",
+        multiply_title: "✖️ Kesirleri çarpma",
+        multiply_explain: "Bu kolay! Üst çarpı üst ve alt çarpı alt. 2×3 ızgaradaki kutuları saymak gibi.",
+        divide_title: "➗ Kesirleri bölme",
+        divide_explain: "Bölmek yerine, ikinci kesri TERS ÇEVİRİP çarpıyoruz! Bu bir matematik sihir numarası 🎩✨",
+        reciprocal: "Ters çevrilmiş",
+        numerator_x_numerator: "Üst × Üst",
+        denominator_x_denominator: "Alt × Alt",
+        piece_size: "Parça boyutu",
+        same_pieces: "Şimdi aynı parçalar!",
+      },
+      helpCards: {
+        add: {
+          title: "➕ Toplama",
+          desc: "<b>Aynı paydaya</b> (aynı parça boyutu) ihtiyacınız var. Sonra sadece payları toplayın.",
+          example: "1/4 + 1/4 = 2/4 = 1/2"
+        },
+        sub: {
+          title: "➖ Çıkarma",
+          desc: "Toplama ile aynı - <b>ortak payda</b> gerekli, sonra payları çıkarın.",
+          example: "3/4 - 1/4 = 2/4 = 1/2"
+        },
+        mul: {
+          title: "✖️ Çarpma",
+          desc: "Basit! <b>Pay × pay</b> ve <b>payda × payda</b> çarpın.",
+          example: "2/3 × 3/4 = 6/12 = 1/2"
+        },
+        div: {
+          title: "➗ Bölme",
+          desc: "Çarpma işlemine dönüştür! İkinci kesri ters çevir ve çarp.",
+          example: "1/2 ÷ 1/4 = 1/2 × 4/1 = 2"
+        }
+      }
+    },
+    RU: {
+      title: "Калькулятор дробей с графикой",
+      subtitle: "Посмотрите, как работают дроби, с помощью красочных визуализаций и подробных пошаговых объяснений.",
+      langLabel: "Язык",
+      calcHeader: "Вычисление",
+      examples: "Примеры: 2 1/3, 3/4, 5",
+      aLabel: "Число A",
+      bLabel: "Число B",
+      opLabel: "Операция",
+      calcBtn: "Вычислить и объяснить",
+      fillBtn: "Вставить пример",
+      hint: "Смешанное число: 2 1/3 (один пробел). Дробь: a/b.",
+      resFrac: "Результат как дробь",
+      resMix: "Результат как смешанное",
+      helpHeader: "Как работают дроби?",
+      helpMini: "Визуальное руководство",
+      stepsDefault: "Здесь появится подробное пошаговое объяснение с графикой.",
+      errEmpty: "Заполните оба поля: A и B.",
+      errFormat: "Неверный формат. Используйте, например: 5 или 3/4 или 2 1/3.",
+      errDiv0: "Нельзя делить на ноль.",
+      visualTitle: "📊 Визуальное представление",
+      visualLabelA: "Число A",
+      visualLabelB: "Число B",
+      visualLabelResult: "Результат",
+      visualSteps: {
+        common_denom_title: "Общий знаменатель",
+        common_denom_why: "🤔 Зачем нам одинаковый знаменатель?",
+        common_denom_explain: "Представь пиццу! Одна дробь имеет кусочки 1/4 пиццы, а другая - кусочки 1/3 пиццы. Это разные размеры! Нужно сделать их одинаковыми, прежде чем складывать или вычитать.",
+        lcm_title: "🔍 Поиск общего знаменателя",
+        lcm_explain: "Находим наименьшее число, которое делится на оба знаменателя (НОК)",
+        converting_title: "✨ Преобразование дробей к общему знаменателю",
+        converting_explain: "Умножаем верх×то_же_число и низ×то_же_число. Это как разрезать пиццу на более мелкие кусочки - у тебя больше кусочков, но то же количество пиццы!",
+        multiplier: "Умножить на",
+        original: "Начало",
+        converted: "После преобразования",
+        computing_title: "🧮 Теперь вычисляем!",
+        computing_explain: "Отлично! У нас одинаковые кусочки (знаменатели равны). Теперь просто складываем/вычитаем верхние числа (числители).",
+        multiply_title: "✖️ Умножение дробей",
+        multiply_explain: "Это легко! Умножаем верх на верх и низ на низ. Как считать клетки в сетке 2×3.",
+        divide_title: "➗ Деление дробей",
+        divide_explain: "Вместо деления ПЕРЕВОРАЧИВАЕМ вторую дробь вверх ногами и умножаем! Это математический фокус 🎩✨",
+        reciprocal: "Перевёрнутая",
+        numerator_x_numerator: "Верх × Верх",
+        denominator_x_denominator: "Низ × Низ",
+        piece_size: "Размер кусочка",
+        same_pieces: "Теперь одинаковые кусочки!",
+      },
+      helpCards: {
+        add: {
+          title: "➕ Сложение",
+          desc: "Нужен <b>одинаковый знаменатель</b> (одинаковый размер кусочков). Затем складываем только числители.",
+          example: "1/4 + 1/4 = 2/4 = 1/2"
+        },
+        sub: {
+          title: "➖ Вычитание",
+          desc: "Так же, как сложение - нужен <b>общий знаменатель</b>, затем вычитаем числители.",
+          example: "3/4 - 1/4 = 2/4 = 1/2"
+        },
+        mul: {
+          title: "✖️ Умножение",
+          desc: "Просто! Умножаем <b>числитель × числитель</b> и <b>знаменатель × знаменатель</b>.",
+          example: "2/3 × 3/4 = 6/12 = 1/2"
+        },
+        div: {
+          title: "➗ Деление",
+          desc: "Преобразуем в умножение! Переворачиваем вторую дробь и умножаем.",
+          example: "1/2 ÷ 1/4 = 1/2 × 4/1 = 2"
+        }
+      }
+    }
+  };
+
+  // ================== DOM ==================
+  const $ = (id) => document.getElementById(id);
+
+  const langSelect = $("langSelect");
+  const opSelect = $("opSelect");
+  const aInput = $("aInput");
+  const bInput = $("bInput");
+  const calcBtn = $("calcBtn");
+  const fillBtn = $("fillBtn");
+  const stepsEl = $("steps");
+  const resFracEl = $("resFrac");
+  const resMixEl = $("resMix");
+  const toast = $("toast");
+  const themeBtn = $("themeBtn");
+  const visualSection = $("visualSection");
+  const fractionVisual = $("fractionVisual");
+  const pieVisual = $("pieVisual");
+  const visualExplanation = $("visualExplanation");
+
+  // ================== helpers (fractions with BigInt) ==================
+  function gcd(a, b){
+    a = a < 0n ? -a : a;
+    b = b < 0n ? -b : b;
+    while (b !== 0n){
+      const t = b;
+      b = a % b;
+      a = t;
+    }
+    return a;
+  }
+
+  function lcm(a, b){
+    return (a / gcd(a,b)) * b;
+  }
+
+  function norm(n, d){
+    if (d === 0n) throw new Error("DIV0");
+    if (d < 0n){ n = -n; d = -d; }
+    const g = gcd(n, d);
+    return { n: n/g, d: d/g };
+  }
+
+  function fracToString(fr){
+    return `${fr.n}/${fr.d}`;
+  }
+
+  function toMixed(fr){
+    const n = fr.n, d = fr.d;
+    const sign = n < 0n ? -1n : 1n;
+    const an = n < 0n ? -n : n;
+    const whole = (an / d) * sign;
+    const rest = an % d;
+
+    if (rest === 0n) return `${whole}`;
+    if (whole === 0n) return `${sign < 0n ? "-" : ""}${rest}/${d}`;
+    return `${whole} ${rest}/${d}`;
+  }
+
+  function parseFraction(text){
+    const s = text.trim();
+    if (!s) throw new Error("EMPTY");
+
+    if (s.includes(" ")){
+      const parts = s.split(/\s+/).filter(Boolean);
+      if (parts.length !== 2) throw new Error("FORMAT");
+      const whole = BigInt(parts[0]);
+      const fr = parseFraction(parts[1]);
+      const wholeAs = norm(whole * fr.d, fr.d);
+      return norm(wholeAs.n + fr.n, fr.d);
+    }
+
+    if (s.includes("/")){
+      const [a,b] = s.split("/");
+      if (a === "" || b === "") throw new Error("FORMAT");
+      return norm(BigInt(a), BigInt(b));
+    }
+
+    return norm(BigInt(s), 1n);
+  }
+
+  // ================== Visual helpers ==================
+  function drawFractionBox(n, d, labelKey, lang){
+    const tt = T[lang];
+    const labels = {
+      'A': tt.visualLabelA,
+      'B': tt.visualLabelB,
+      'Result': tt.visualLabelResult
+    };
+    
+    const box = document.createElement('div');
+    box.className = 'fraction-box';
+    
+    const display = document.createElement('div');
+    display.className = 'fraction-display';
+    
+    const num = document.createElement('div');
+    num.className = 'numerator';
+    num.textContent = n;
+    
+    const line = document.createElement('div');
+    line.className = 'fraction-line';
+    
+    const denom = document.createElement('div');
+    denom.className = 'denominator';
+    denom.textContent = d;
+    
+    display.appendChild(num);
+    display.appendChild(line);
+    display.appendChild(denom);
+    
+    const labelEl = document.createElement('div');
+    labelEl.className = 'pie-label';
+    labelEl.textContent = labels[labelKey] || labelKey;
+    
+    box.appendChild(display);
+    box.appendChild(labelEl);
+    
+    return box;
+  }
+
+  function drawPieChart(numerator, denominator, label, canvasId){
+    const wrapper = document.createElement('div');
+    wrapper.className = 'pie-wrapper';
+    
+    const canvas = document.createElement('canvas');
+    canvas.id = canvasId;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = 120 * dpr;
+    canvas.height = 120 * dpr;
+    canvas.style.width = '120px';
+    canvas.style.height = '120px';
+    
+    const labelEl = document.createElement('div');
+    labelEl.className = 'pie-label';
+    labelEl.textContent = label;
+    
+    wrapper.appendChild(labelEl);
+    wrapper.appendChild(canvas);
+    
+    setTimeout(() => {
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+      
+      const centerX = 60;
+      const centerY = 60;
+      const radius = 50;
+      
+      const isDark = document.body.dataset.theme === 'dark';
+      
+      // Background circle
+      ctx.fillStyle = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(2,6,23,0.08)';
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Filled portion
+      const angle = (numerator / denominator) * 2 * Math.PI;
+      const gradient = ctx.createLinearGradient(0, 0, 120, 120);
+      gradient.addColorStop(0, '#7c5cff');
+      gradient.addColorStop(1, '#38bdf8');
+      
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.arc(centerX, centerY, radius, -Math.PI / 2, -Math.PI / 2 + angle);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Division lines
+      ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(2,6,23,0.4)';
+      ctx.lineWidth = 2;
+      for(let i = 0; i < denominator; i++){
+        const a = (i / denominator) * 2 * Math.PI - Math.PI / 2;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(
+          centerX + radius * Math.cos(a),
+          centerY + radius * Math.sin(a)
+        );
+        ctx.stroke();
+      }
+      
+      // Border
+      ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(2,6,23,0.2)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+      ctx.stroke();
+      
+      // Text
+      ctx.fillStyle = isDark ? 'rgba(255,255,255,0.9)' : 'rgba(2,6,23,0.9)';
+      ctx.font = 'bold 16px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`${numerator}/${denominator}`, centerX, centerY);
+    }, 10);
+    
+    return wrapper;
+  }
+
+  function createVisualExplanation(A, B, op, result, lang) {
+    const tt = T[lang].visualSteps;
+    const labels = T[lang];
+    visualExplanation.innerHTML = '';
+    
+    if (op === '+' || op === '-') {
+      // Addition/Subtraction - show common denominator process
+      const da = A.d, db = B.d;
+      const L = lcm(da, db);
+      const mA = L / da;
+      const mB = L / db;
+      const A2 = norm(A.n * mA, A.d * mA);
+      const B2 = norm(B.n * mB, B.d * mB);
+      
+      // Step 1: Why common denominator
+      const step1 = document.createElement('div');
+      step1.className = 'visual-step';
+      step1.innerHTML = `
+        <div class="visual-step-title">
+          <span class="step-number">1</span>
+          <span>${tt.common_denom_why}</span>
+        </div>
+        <div class="visual-step-content">
+          <p style="margin: 8px 0; line-height: 1.6;">${tt.common_denom_explain}</p>
+        </div>
+        <div class="explanation-grid">
+          <div class="explanation-card">
+            <div class="explanation-card-title">${labels.visualLabelA}</div>
+            <div class="explanation-card-value">${fracToString(A)}</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:6px;">
+              ${tt.piece_size}: 1/${da}
+            </div>
+          </div>
+          <div class="explanation-card">
+            <div class="explanation-card-title">${labels.visualLabelB}</div>
+            <div class="explanation-card-value">${fracToString(B)}</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:6px;">
+              ${tt.piece_size}: 1/${db}
+            </div>
+          </div>
+        </div>
+      `;
+      visualExplanation.appendChild(step1);
+      
+      // Step 2: Finding LCM
+      const step2 = document.createElement('div');
+      step2.className = 'visual-step';
+      step2.innerHTML = `
+        <div class="visual-step-title">
+          <span class="step-number">2</span>
+          <span>${tt.lcm_title}</span>
+        </div>
+        <div class="visual-step-content">
+          <p style="margin: 8px 0;">${tt.lcm_explain}</p>
+          <div style="text-align: center; margin: 12px 0;">
+            <span class="lcm-box">NWW(${da}, ${db}) = ${L}</span>
+          </div>
+          <p style="margin: 8px 0; font-size: 12px; color: var(--muted);">
+            ${tt.same_pieces}
+          </p>
+        </div>
+      `;
+      visualExplanation.appendChild(step2);
+      
+      // Step 3: Converting fractions
+      const step3 = document.createElement('div');
+      step3.className = 'visual-step';
+      step3.innerHTML = `
+        <div class="visual-step-title">
+          <span class="step-number">3</span>
+          <span>${tt.converting_title}</span>
+        </div>
+        <div class="visual-step-content">
+          <p style="margin: 8px 0; line-height: 1.6;">${tt.converting_explain}</p>
+        </div>
+        <div class="fraction-comparison">
+          <div>
+            <div style="font-size:11px; color:var(--muted); margin-bottom:6px; font-weight:600;">${tt.original}</div>
+            <div style="font-family:var(--mono); font-size:20px; font-weight:700;">${fracToString(A)}</div>
+          </div>
+          <div class="arrow">×</div>
+          <div class="multiplier-box">${mA}/${mA}</div>
+          <div class="arrow">→</div>
+          <div>
+            <div style="font-size:11px; color:var(--good); margin-bottom:6px; font-weight:600;">${tt.converted}</div>
+            <div style="font-family:var(--mono); font-size:20px; font-weight:700; color:var(--good);">${fracToString(A2)}</div>
+          </div>
+        </div>
+        <div class="fraction-comparison">
+          <div>
+            <div style="font-size:11px; color:var(--muted); margin-bottom:6px; font-weight:600;">${tt.original}</div>
+            <div style="font-family:var(--mono); font-size:20px; font-weight:700;">${fracToString(B)}</div>
+          </div>
+          <div class="arrow">×</div>
+          <div class="multiplier-box">${mB}/${mB}</div>
+          <div class="arrow">→</div>
+          <div>
+            <div style="font-size:11px; color:var(--good); margin-bottom:6px; font-weight:600;">${tt.converted}</div>
+            <div style="font-family:var(--mono); font-size:20px; font-weight:700; color:var(--good);">${fracToString(B2)}</div>
+          </div>
+        </div>
+      `;
+      visualExplanation.appendChild(step3);
+      
+      // Step 4: Computing
+      const step4 = document.createElement('div');
+      step4.className = 'visual-step';
+      const opSymbol = op === '+' ? '+' : '−';
+      const computation = op === '+' ? `${A2.n} + ${B2.n}` : `${A2.n} − ${B2.n}`;
+      const resultNum = op === '+' ? A2.n + B2.n : A2.n - B2.n;
+      step4.innerHTML = `
+        <div class="visual-step-title">
+          <span class="step-number">4</span>
+          <span>${tt.computing_title}</span>
+        </div>
+        <div class="visual-step-content">
+          <p style="margin: 8px 0; line-height: 1.6;">${tt.computing_explain}</p>
+        </div>
+        <div class="fraction-comparison" style="justify-content: center;">
+          <div style="font-family:var(--mono); font-size:18px; font-weight:700; text-align:center; line-height:1.8;">
+            <div>${fracToString(A2)} ${opSymbol} ${fracToString(B2)} =</div>
+            <div style="color:var(--accent2); margin: 8px 0;">(${computation})/${L} =</div>
+            <div style="color:var(--good); font-size:22px;">${fracToString(result)}</div>
+          </div>
+        </div>
+      `;
+      visualExplanation.appendChild(step4);
+      
+    } else if (op === '*') {
+      // Multiplication
+      const step1 = document.createElement('div');
+      step1.className = 'visual-step';
+      step1.innerHTML = `
+        <div class="visual-step-title">
+          <span class="step-number">1</span>
+          <span>${tt.multiply_title}</span>
+        </div>
+        <div class="visual-step-content">
+          <p style="margin: 8px 0; line-height: 1.6;">${tt.multiply_explain}</p>
+        </div>
+        <div class="explanation-grid">
+          <div class="explanation-card">
+            <div class="explanation-card-title">${tt.numerator_x_numerator}</div>
+            <div class="explanation-card-value">${A.n} × ${B.n} = ${A.n * B.n}</div>
+          </div>
+          <div class="explanation-card">
+            <div class="explanation-card-title">${tt.denominator_x_denominator}</div>
+            <div class="explanation-card-value">${A.d} × ${B.d} = ${A.d * B.d}</div>
+          </div>
+        </div>
+        <div class="fraction-comparison" style="justify-content: center;">
+          <div style="font-family:var(--mono); font-size:18px; font-weight:700; text-align:center; line-height:1.8;">
+            <div>${fracToString(A)} × ${fracToString(B)} =</div>
+            <div style="color:var(--accent2); margin: 8px 0;">${A.n * B.n}/${A.d * B.d} =</div>
+            <div style="color:var(--good); font-size:22px;">${fracToString(result)}</div>
+          </div>
+        </div>
+      `;
+      visualExplanation.appendChild(step1);
+      
+    } else if (op === '/') {
+      // Division
+      const B_inv = norm(B.d, B.n);
+      
+      const step1 = document.createElement('div');
+      step1.className = 'visual-step';
+      step1.innerHTML = `
+        <div class="visual-step-title">
+          <span class="step-number">1</span>
+          <span>${tt.divide_title}</span>
+        </div>
+        <div class="visual-step-content">
+          <p style="margin: 8px 0; line-height: 1.6;">${tt.divide_explain}</p>
+        </div>
+        <div class="fraction-comparison" style="justify-content: center;">
+          <div>
+            <div style="font-size:11px; color:var(--muted); margin-bottom:6px; font-weight:600;">${tt.original}</div>
+            <div style="font-family:var(--mono); font-size:20px; font-weight:700;">${fracToString(B)}</div>
+          </div>
+          <div class="arrow" style="font-size:32px;">🔄</div>
+          <div>
+            <div style="font-size:11px; color:var(--warn); margin-bottom:6px; font-weight:600;">${tt.reciprocal}</div>
+            <div style="font-family:var(--mono); font-size:20px; font-weight:700; color:var(--warn);">${fracToString(B_inv)}</div>
+          </div>
+        </div>
+      `;
+      visualExplanation.appendChild(step1);
+      
+      const step2 = document.createElement('div');
+      step2.className = 'visual-step';
+      step2.innerHTML = `
+        <div class="visual-step-title">
+          <span class="step-number">2</span>
+          <span>${tt.multiply_title}</span>
+        </div>
+        <div class="visual-step-content">
+          <p style="margin: 8px 0;">${tt.multiply_explain}</p>
+        </div>
+        <div class="explanation-grid">
+          <div class="explanation-card">
+            <div class="explanation-card-title">${tt.numerator_x_numerator}</div>
+            <div class="explanation-card-value">${A.n} × ${B_inv.n} = ${A.n * B_inv.n}</div>
+          </div>
+          <div class="explanation-card">
+            <div class="explanation-card-title">${tt.denominator_x_denominator}</div>
+            <div class="explanation-card-value">${A.d} × ${B_inv.d} = ${A.d * B_inv.d}</div>
+          </div>
+        </div>
+        <div class="fraction-comparison" style="justify-content: center;">
+          <div style="font-family:var(--mono); font-size:18px; font-weight:700; text-align:center; line-height:1.8;">
+            <div>${fracToString(A)} × ${fracToString(B_inv)} =</div>
+            <div style="color:var(--accent2); margin: 8px 0;">${A.n * B_inv.n}/${A.d * B_inv.d} =</div>
+            <div style="color:var(--good); font-size:22px;">${fracToString(result)}</div>
+          </div>
+        </div>
+      `;
+      visualExplanation.appendChild(step2);
+    }
+  }
+
+  function createVisuals(A, B, op, result, lang){
+    const tt = T[lang];
+    
+    // Clear previous content
+    visualExplanation.innerHTML = '';
+    fractionVisual.innerHTML = '';
+    pieVisual.innerHTML = '';
+    
+    // Update visual section title
+    document.querySelector('.visual-title').textContent = tt.visualTitle;
+    
+    // Create detailed visual explanation
+    createVisualExplanation(A, B, op, result, lang);
+    
+    // Create fraction display
+    const container = document.createElement('div');
+    container.className = 'fraction-visual';
+    
+    container.appendChild(drawFractionBox(A.n, A.d, 'A', lang));
+    
+    const opEl = document.createElement('div');
+    opEl.className = 'operator';
+    opEl.textContent = op;
+    container.appendChild(opEl);
+    
+    container.appendChild(drawFractionBox(B.n, B.d, 'B', lang));
+    
+    const eqEl = document.createElement('div');
+    eqEl.className = 'operator';
+    eqEl.textContent = '=';
+    container.appendChild(eqEl);
+    
+    container.appendChild(drawFractionBox(result.n, result.d, 'Result', lang));
+    
+    fractionVisual.appendChild(container);
+    
+    // Pie charts
+    const pieContainer = document.createElement('div');
+    pieContainer.className = 'pie-container';
+    
+    // Only draw pies for reasonable denominators
+    const maxDenom = 12;
+    if (Number(A.d) <= maxDenom && Number(A.d) > 0) {
+      pieContainer.appendChild(drawPieChart(Number(A.n), Number(A.d), tt.visualLabelA, 'pieA'));
+    }
+    if (Number(B.d) <= maxDenom && Number(B.d) > 0) {
+      pieContainer.appendChild(drawPieChart(Number(B.n), Number(B.d), tt.visualLabelB, 'pieB'));
+    }
+    if (Number(result.d) <= maxDenom && Number(result.d) > 0) {
+      pieContainer.appendChild(drawPieChart(Number(result.n), Number(result.d), tt.visualLabelResult, 'pieResult'));
+    }
+    
+    pieVisual.appendChild(pieContainer);
+    visualSection.style.display = 'block';
+  }
+
+  // ================== Explanation builder ==================
+  function explain(lang, A_text, op, B_text){
+    const tt = T[lang];
+    const A = parseFraction(A_text);
+    const B = parseFraction(B_text);
+
+    const lines = [];
+    const NL = () => lines.push("");
+
+    if (lang === "PL"){
+      lines.push("KROK 1 — ZAMIANA NA JEDEN FORMAT (ułamki):");
+      lines.push(`A = "${A_text}"  →  A = ${fracToString(A)}`);
+      lines.push(`B = "${B_text}"  →  B = ${fracToString(B)}`);
+      lines.push("Po co? Żeby zawsze liczyć tym samym sposobem (bez wyjątków).");
+      NL();
+    } else if (lang === "EN"){
+      lines.push("STEP 1 — PARSE INTO ONE FORMAT (fractions):");
+      lines.push(`A = "${A_text}"  →  A = ${fracToString(A)}`);
+      lines.push(`B = "${B_text}"  →  B = ${fracToString(B)}`);
+      lines.push("Why? So we always calculate in one consistent way.");
+      NL();
+    } else {
+      lines.push("SCHRITT 1 — IN EIN FORMAT UMWANDELN (Brüche):");
+      lines.push(`A = "${A_text}"  →  A = ${fracToString(A)}`);
+      lines.push(`B = "${B_text}"  →  B = ${fracToString(B)}`);
+      lines.push("Warum? Damit wir immer auf die gleiche Weise rechnen.");
+      NL();
+    }
+
+    let result;
+
+    if (op === "+" || op === "-"){
+      const da = A.d, db = B.d;
+      const L = lcm(da, db);
+      const mA = L / da;
+      const mB = L / db;
+
+      const A2 = norm(A.n * mA, A.d * mA);
+      const B2 = norm(B.n * mB, B.d * mB);
+
+      if (lang === "PL"){
+        lines.push("KROK 2 — DLACZEGO WSPÓLNY MIANOWNIK?");
+        lines.push("Przy + i - musisz dodawać/odejmować kawałki TEGO SAMEGO ROZMIARU.");
+        lines.push(`Tu: A ma mianownik ${da} (kawałek = 1/${da}), a B ma mianownik ${db} (kawałek = 1/${db}).`);
+        lines.push("Najpierw zmieniamy oba ułamki tak, żeby miały TEN SAM mianownik.");
+        NL();
+
+        lines.push("KROK 3 — SKĄD SIĘ BIERZE WSPÓLNY MIANOWNIK?");
+        lines.push("Bierzemy najmniejszą liczbę, która dzieli się przez oba mianowniki (NWW / LCM).");
+        lines.push(`LCM(${da}, ${db}) = ${L}`);
+        NL();
+
+        lines.push("KROK 4 — JAK ZAMIENIAMY UŁAMKI NA TEN SAM MIANOWNIK?");
+        lines.push("Żeby nie zmienić wartości ułamka, mnożymy LICZNIK i MIANOWNIK przez tę samą liczbę.");
+        lines.push(`A = ${fracToString(A)}. Żeby mieć mianownik ${L}, mnożymy przez ${mA}/${mA}.`);
+        lines.push(`A' = (${A.n}×${mA})/(${A.d}×${mA}) = ${fracToString(A2)}`);
+        lines.push(`B = ${fracToString(B)}. Żeby mieć mianownik ${L}, mnożymy przez ${mB}/${mB}.`);
+        lines.push(`B' = (${B.n}×${mB})/(${B.d}×${mB}) = ${fracToString(B2)}`);
+        NL();
+
+        lines.push("KROK 5 — TERAZ WŁAŚCIWE DODAWANIE / ODEJMOWANIE:");
+        lines.push("Gdy mianowniki są równe, zostawiamy mianownik i liczymy TYLKO liczniki.");
+      } else if (lang === "EN"){
+        lines.push("STEP 2 — WHY A COMMON DENOMINATOR?");
+        lines.push("For + and -, you must combine pieces of the SAME size.");
+        lines.push(`Here: denominators are ${da} and ${db}. Different piece sizes → rewrite them first.`);
+        NL();
+
+        lines.push("STEP 3 — WHERE DOES IT COME FROM?");
+        lines.push("We take the smallest number divisible by both denominators (LCM).");
+        lines.push(`LCM(${da}, ${db}) = ${L}`);
+        NL();
+
+        lines.push("STEP 4 — HOW DO WE REWRITE FRACTIONS?");
+        lines.push("To keep the value the same, multiply numerator AND denominator by the same number.");
+        lines.push(`A = ${fracToString(A)}. To reach denominator ${L}, multiply by ${mA}/${mA}.`);
+        lines.push(`A' = (${A.n}×${mA})/(${A.d}×${mA}) = ${fracToString(A2)}`);
+        lines.push(`B = ${fracToString(B)}. To reach denominator ${L}, multiply by ${mB}/${mB}.`);
+        lines.push(`B' = (${B.n}×${mB})/(${B.d}×${mB}) = ${fracToString(B2)}`);
+        NL();
+
+        lines.push("STEP 5 — NOW ADD / SUBTRACT:");
+        lines.push("With equal denominators, keep the denominator and compute ONLY numerators.");
+      } else {
+        lines.push("SCHRITT 2 — WARUM GEMEINSAMER NENNER?");
+        lines.push("Für + und - muss man Stücke der GLEICHEN Größe zusammenrechnen.");
+        lines.push(`Hier: Nenner ${da} und ${db}. Also erst auf gleichen Nenner bringen.`);
+        NL();
+
+        lines.push("SCHRITT 3 — WOHER KOMMT ER?");
+        lines.push("Wir nehmen das kleinste gemeinsame Vielfache (LCM/kgV).");
+        lines.push(`LCM(${da}, ${db}) = ${L}`);
+        NL();
+
+        lines.push("SCHRITT 4 — WIE UMSCHREIBEN WIR DIE BRÜCHE?");
+        lines.push("Damit der Wert gleich bleibt: Zähler UND Nenner mit derselben Zahl multiplizieren.");
+        lines.push(`A = ${fracToString(A)}. Für Nenner ${L}: mit ${mA}/${mA} multiplizieren.`);
+        lines.push(`A' = (${A.n}×${mA})/(${A.d}×${mA}) = ${fracToString(A2)}`);
+        lines.push(`B = ${fracToString(B)}. Für Nenner ${L}: mit ${mB}/${mB} multiplizieren.`);
+        lines.push(`B' = (${B.n}×${mB})/(${B.d}×${mB}) = ${fracToString(B2)}`);
+        NL();
+
+        lines.push("SCHRITT 5 — JETZT RECHNEN:");
+        lines.push("Bei gleichem Nenner bleibt der Nenner gleich, nur Zähler rechnen.");
+      }
+
+      let raw;
+      if (op === "+"){
+        raw = norm(A2.n + B2.n, L);
+        result = norm(A.n * B.d + B.n * A.d, A.d * B.d);
+        if (lang === "PL"){
+          lines.push(`${fracToString(A2)} + ${fracToString(B2)} = (${A2.n} + ${B2.n})/${L}`);
+          lines.push(`= ${A2.n + B2.n}/${L} = ${fracToString(raw)}`);
+        } else if (lang === "EN"){
+          lines.push(`${fracToString(A2)} + ${fracToString(B2)} = (${A2.n} + ${B2.n})/${L}`);
+          lines.push(`= ${A2.n + B2.n}/${L} = ${fracToString(raw)}`);
+        } else {
+          lines.push(`${fracToString(A2)} + ${fracToString(B2)} = (${A2.n} + ${B2.n})/${L}`);
+          lines.push(`= ${A2.n + B2.n}/${L} = ${fracToString(raw)}`);
+        }
+      } else {
+        raw = norm(A2.n - B2.n, L);
+        result = norm(A.n * B.d - B.n * A.d, A.d * B.d);
+        lines.push(`${fracToString(A2)} - ${fracToString(B2)} = (${A2.n} - ${B2.n})/${L}`);
+        lines.push(`= ${A2.n - B2.n}/${L} = ${fracToString(raw)}`);
+      }
+
+      NL();
+      if (lang === "PL"){
+        lines.push("KROK 6 — WYNIK KOŃCOWY:");
+        lines.push(`Ułamek: ${fracToString(result)}`);
+        lines.push(`Mieszana: ${toMixed(result)}`);
+      } else if (lang === "EN"){
+        lines.push("STEP 6 — FINAL RESULT:");
+        lines.push(`Fraction: ${fracToString(result)}`);
+        lines.push(`Mixed: ${toMixed(result)}`);
+      } else {
+        lines.push("SCHRITT 6 — ENDERGEBNIS:");
+        lines.push(`Bruch: ${fracToString(result)}`);
+        lines.push(`Gemischt: ${toMixed(result)}`);
+      }
+
+    } else if (op === "*"){
+      const raw = norm(A.n * B.n, A.d * B.d);
+      result = raw;
+
+      if (lang === "PL"){
+        lines.push("KROK 2 — MNOŻENIE:");
+        lines.push("Tu nie potrzeba wspólnego mianownika.");
+        lines.push("Mnożymy licznik×licznik i mianownik×mianownik:");
+        lines.push(`${fracToString(A)} × ${fracToString(B)} = (${A.n}×${B.n})/(${A.d}×${B.d})`);
+        lines.push(`= ${A.n * B.n}/${A.d * B.d} = ${fracToString(raw)}`);
+        NL();
+        lines.push("WYNIK:");
+        lines.push(`Ułamek: ${fracToString(result)}`);
+        lines.push(`Mieszana: ${toMixed(result)}`);
+      } else if (lang === "EN"){
+        lines.push("STEP 2 — MULTIPLY:");
+        lines.push("No common denominator needed.");
+        lines.push("Multiply numerator×numerator and denominator×denominator:");
+        lines.push(`${fracToString(A)} × ${fracToString(B)} = (${A.n}×${B.n})/(${A.d}×${B.d})`);
+        lines.push(`= ${A.n * B.n}/${A.d * B.d} = ${fracToString(raw)}`);
+        NL();
+        lines.push("RESULT:");
+        lines.push(`Fraction: ${fracToString(result)}`);
+        lines.push(`Mixed: ${toMixed(result)}`);
+      } else {
+        lines.push("SCHRITT 2 — MULTIPLIKATION:");
+        lines.push("Kein gemeinsamer Nenner nötig.");
+        lines.push("Zähler×Zähler und Nenner×Nenner:");
+        lines.push(`${fracToString(A)} × ${fracToString(B)} = (${A.n}×${B.n})/(${A.d}×${B.d})`);
+        lines.push(`= ${A.n * B.n}/${A.d * B.d} = ${fracToString(raw)}`);
+        NL();
+        lines.push("ERGEBNIS:");
+        lines.push(`Bruch: ${fracToString(result)}`);
+        lines.push(`Gemischt: ${toMixed(result)}`);
+      }
+
+    } else {
+      if (B.n === 0n) throw new Error("DIV0");
+      const B_inv = norm(B.d, B.n);
+      const raw = norm(A.n * B_inv.n, A.d * B_inv.d);
+      result = raw;
+
+      if (lang === "PL"){
+        lines.push("KROK 2 — DZIELENIE:");
+        lines.push("Zasada: dzielenie przez ułamek = mnożenie przez odwrotność.");
+        lines.push(`B = ${fracToString(B)} → odwrotność(B) = ${fracToString(B_inv)} (zamieniamy miejscami licznik i mianownik)`);
+        lines.push("Teraz liczymy jak zwykłe mnożenie:");
+        lines.push(`${fracToString(A)} ÷ ${fracToString(B)} = ${fracToString(A)} × ${fracToString(B_inv)}`);
+        lines.push(`= (${A.n}×${B_inv.n})/(${A.d}×${B_inv.d})`);
+        lines.push(`= ${A.n * B_inv.n}/${A.d * B_inv.d} = ${fracToString(raw)}`);
+        NL();
+        lines.push("WYNIK:");
+        lines.push(`Ułamek: ${fracToString(result)}`);
+        lines.push(`Mieszana: ${toMixed(result)}`);
+      } else if (lang === "EN"){
+        lines.push("STEP 2 — DIVIDE:");
+        lines.push("Rule: dividing by a fraction = multiplying by its reciprocal.");
+        lines.push(`B = ${fracToString(B)} → reciprocal(B) = ${fracToString(B_inv)} (swap top and bottom)`);
+        lines.push("Now do normal multiplication:");
+        lines.push(`${fracToString(A)} ÷ ${fracToString(B)} = ${fracToString(A)} × ${fracToString(B_inv)}`);
+        lines.push(`= (${A.n}×${B_inv.n})/(${A.d}×${B_inv.d})`);
+        lines.push(`= ${A.n * B_inv.n}/${A.d * B_inv.d} = ${fracToString(raw)}`);
+        NL();
+        lines.push("RESULT:");
+        lines.push(`Fraction: ${fracToString(result)}`);
+        lines.push(`Mixed: ${toMixed(result)}`);
+      } else {
+        lines.push("SCHRITT 2 — DIVISION:");
+        lines.push("Regel: durch einen Bruch teilen = mit dem Kehrwert multiplizieren.");
+        lines.push(`B = ${fracToString(B)} → Kehrwert(B) = ${fracToString(B_inv)} (oben/unten tauschen)`);
+        lines.push("Jetzt normal multiplizieren:");
+        lines.push(`${fracToString(A)} ÷ ${fracToString(B)} = ${fracToString(A)} × ${fracToString(B_inv)}`);
+        lines.push(`= (${A.n}×${B_inv.n})/(${A.d}×${B_inv.d})`);
+        lines.push(`= ${A.n * B_inv.n}/${A.d * B_inv.d} = ${fracToString(raw)}`);
+        NL();
+        lines.push("ERGEBNIS:");
+        lines.push(`Bruch: ${fracToString(result)}`);
+        lines.push(`Gemischt: ${toMixed(result)}`);
+      }
+    }
+
+    return { result, steps: lines.join("\n"), A, B };
+  }
+
+  // ================== UI wiring ==================
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.style.display = "block";
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(()=> toast.style.display = "none", 2400);
+  }
+
+  function applyLang(lang){
+    const tt = T[lang];
+    $("title").textContent = tt.title;
+    $("subtitle").textContent = tt.subtitle;
+    $("langLabel").textContent = tt.langLabel;
+    $("calcHeader").textContent = tt.calcHeader;
+    $("examples").textContent = tt.examples;
+    $("aLabel").textContent = tt.aLabel;
+    $("bLabel").textContent = tt.bLabel;
+    $("opLabel").textContent = tt.opLabel;
+    calcBtn.textContent = tt.calcBtn;
+    fillBtn.textContent = tt.fillBtn;
+    $("hint").textContent = tt.hint;
+    $("resFracLabel").textContent = tt.resFrac;
+    $("resMixLabel").textContent = tt.resMix;
+    $("helpHeader").textContent = tt.helpHeader;
+    $("helpMini").textContent = tt.helpMini;
+
+    // Update help cards
+    const helpCards = $("helpCards");
+    helpCards.innerHTML = `
+      <div class="help-card">
+        <h3>${tt.helpCards.add.title}</h3>
+        <p>${tt.helpCards.add.desc}</p>
+        <div style="margin-top:8px;">
+          <code style="font-size:11px; color:var(--accent2)">${tt.helpCards.add.example}</code>
+        </div>
+      </div>
+
+      <div class="help-card">
+        <h3>${tt.helpCards.sub.title}</h3>
+        <p>${tt.helpCards.sub.desc}</p>
+        <div style="margin-top:8px;">
+          <code style="font-size:11px; color:var(--accent2)">${tt.helpCards.sub.example}</code>
+        </div>
+      </div>
+
+      <div class="help-card">
+        <h3>${tt.helpCards.mul.title}</h3>
+        <p>${tt.helpCards.mul.desc}</p>
+        <div style="margin-top:8px;">
+          <code style="font-size:11px; color:var(--accent2)">${tt.helpCards.mul.example}</code>
+        </div>
+      </div>
+
+      <div class="help-card">
+        <h3>${tt.helpCards.div.title}</h3>
+        <p>${tt.helpCards.div.desc}</p>
+        <div style="margin-top:8px;">
+          <code style="font-size:11px; color:var(--accent2)">${tt.helpCards.div.example}</code>
+        </div>
+      </div>
+    `;
+
+    // Update help tip
+    const helpTip = $("helpTip");
+    if (lang === "PL") {
+      helpTip.innerHTML = '💡 <b>Wskazówka:</b> Naciśnij <span class="kbd">Enter</span> żeby policzyć.';
+    } else if (lang === "EN") {
+      helpTip.innerHTML = '💡 <b>Tip:</b> Press <span class="kbd">Enter</span> to calculate.';
+    } else if (lang === "DE") {
+      helpTip.innerHTML = '💡 <b>Tipp:</b> <span class="kbd">Enter</span> drücken zum Rechnen.';
+    } else if (lang === "TR") {
+      helpTip.innerHTML = '💡 <b>İpucu:</b> Hesaplamak için <span class="kbd">Enter</span> tuşuna basın.';
+    } else if (lang === "RU") {
+      helpTip.innerHTML = '💡 <b>Подсказка:</b> Нажмите <span class="kbd">Enter</span> для вычисления.';
+    }
+
+    if (stepsEl.textContent.trim() === "" || 
+        stepsEl.textContent.includes("Tu pojawi") || 
+        stepsEl.textContent.includes("detailed") || 
+        stepsEl.textContent.includes("Hier erscheint") ||
+        stepsEl.textContent.includes("Burada") ||
+        stepsEl.textContent.includes("Здесь появится")){
+      stepsEl.textContent = tt.stepsDefault;
+    }
+  }
+
+  function calc(){
+    const lang = langSelect.value;
+    const tt = T[lang];
+    const A = aInput.value.trim();
+    const B = bInput.value.trim();
+    const op = opSelect.value;
+
+    if (!A || !B){
+      showToast(tt.errEmpty);
+      return;
+    }
+
+    try{
+      const { result, steps, A: fracA, B: fracB } = explain(lang, A, op, B);
+      resFracEl.textContent = `${result.n}/${result.d}`;
+      resMixEl.textContent = toMixed(result);
+      stepsEl.textContent = steps;
+      
+      createVisuals(fracA, fracB, op, result, lang);
+    }catch(e){
+      visualSection.style.display = 'none';
+      if (String(e.message).includes("DIV0")){
+        showToast(tt.errDiv0);
+      } else {
+        showToast(tt.errFormat);
+      }
+    }
+  }
+
+  function fillExample(){
+    const lang = langSelect.value;
+    const examples = [
+      ["1/2", "+", "1/3"],
+      ["2 1/3", "+", "1/6"],
+      ["5", "-", "2 3/4"],
+      ["3/5", "*", "10/9"],
+      ["2 1/2", "/", "3/4"]
+    ];
+    const pick = examples[Math.floor(Math.random()*examples.length)];
+    aInput.value = pick[0];
+    opSelect.value = pick[1];
+    bInput.value = pick[2];
+    stepsEl.textContent = T[lang].stepsDefault;
+    resFracEl.textContent = "—";
+    resMixEl.textContent = "—";
+    visualSection.style.display = 'none';
+  }
+
+  themeBtn.addEventListener("click", ()=>{
+    const b = document.body;
+    b.dataset.theme = b.dataset.theme === "dark" ? "light" : "dark";
+  });
+
+  langSelect.addEventListener("change", () => {
+    applyLang(langSelect.value);
+    // Recalculate if there are results
+    if (resFracEl.textContent !== "—") {
+      calc();
+    }
+  });
+  calcBtn.addEventListener("click", calc);
+  fillBtn.addEventListener("click", fillExample);
+
+  document.addEventListener("keydown", (e)=>{
+    if (e.key === "Enter") calc();
+  });
+  
+  // Prevent double-tap zoom on iOS
+  let lastTouchEnd = 0;
+  document.addEventListener('touchend', (e) => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) {
+      e.preventDefault();
+    }
+    lastTouchEnd = now;
+  }, false);
+
+  // init
+  aInput.value = "1/2";
+  bInput.value = "1/3";
+  applyLang("PL");
+  stepsEl.textContent = T.PL.stepsDefault;
+</script>
+</body>
+</html>
